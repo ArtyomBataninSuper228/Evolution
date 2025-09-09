@@ -3,12 +3,12 @@ import numpy as np
 import pygame as pg
 
 organizms = []
-simulation_time = 0
-h = 0
+simulation_time = 0# время с начала симуляции
+h = 1/100# время между итерациями модели
 
 
 class Organizm:
-    def __init__(self, x, y, health = 100, energy = 100, speed = 10, color = (0,0,0), generation = 0, type = "plant", radius_of_view = 100, parents = [], gender = "male"):
+    def __init__(self, x, y, health = 100, energy = 100, speed = 10, color = (0,0,0), generation = 0, type = "plant", radius_of_view = 100, parents = [], gender = "male", icon = None):
         global organizms, simulation_time
         self.x = x
         self.y = y
@@ -23,10 +23,12 @@ class Organizm:
         self.age = 0
         self.parents = parents
         self.gender = gender
+        self.icon = icon
         organizms.append(self)
     def go(self, vector):
-        self.x += vector[0]*self.speed
-        self.y  += vector[1] * self.speed
+        global h
+        self.x += vector[0]*self.speed*h
+        self.y  += vector[1] * self.speed*h
 class Ship (Organizm):
     def __init__(self, x, y, class_gender):
         super.__init__(x, y, gender = class_gender)
