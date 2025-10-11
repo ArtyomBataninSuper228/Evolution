@@ -9,7 +9,7 @@ from pandas.conftest import rand_series_with_duplicate_datetimeindex
 organizms = []
 simulation_time = 0  # время с начала симуляции
 h = 1 / 100  # время между итерациями модели
-
+mutationfactor = 0.1
 
 
 def radius(o1, o2):
@@ -96,7 +96,24 @@ class Ship(Organizm):
                     self.health -= 1
                 self.time_of_start_timeout = simulation_time
             return
-        if len(partners) != 0 and self.energy > 50
+        if len(partners) != 0 and self.energy > 50:
+            def reiting(p):
+                reit =0
+                if p.energy <= 50:
+                    return 0
+                reit += abs(self.color[0] - p.color[0])
+                reit += abs(self.color[1] - p.color[1])
+                reit += abs(self.color[2] - p.color[2])
+                reit += p.speed
+                return reit
+            partners.sort(key = reiting)
+            if radius(self, partners[-1] < self.actionradius):
+                self.energy -= 50
+                partners[-1].energy -= 50
+                r = self.color[0]/2 + partners[-1].color[0]/2
+                g = self.color[1] / 2 + partners[-1].color[1] / 2
+                b = self.color[2] / 2 + partners[-1].color[2] / 2
+
 
 
 
