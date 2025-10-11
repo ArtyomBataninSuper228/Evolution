@@ -10,17 +10,20 @@ h = 1 / 100  # время между итерациями модели
 
 
 class Organizm:
-    def __init__(self, x=0, y=0, health=100, energy=100, speed=10, color=(0, 0, 0), generation=0, type="plant",
+    def __init__(self, x=0, y=0, health=100, energy=100, speed=10, color=(0, 0, 0), generation=0,
                  radius_of_view=100, parents=[], gender="male", icon=None):
         global organizms, simulation_time
         self.x = x
         self.y = y
-        self.health = health
+        self.health = health # Относительное здоровье ( от 0 до 1)
+        self.maxhealth = 100# Максимальное значение здоровья
+        self.kreg = 0.01# коэффициент регенерации
+        self.kmoove = 0.01# коэффициент затраты энергии на перемещение
+        self.actionradius = 1 # радиус действия (есть или драться)
         self.energy = energy
         self.speed = speed
         self.color = color
         self.generation = generation
-        self.type = type
         self.radius_of_view = radius_of_view
         self.time_of_birth = simulation_time
         self.age = 0
@@ -43,7 +46,7 @@ class Ship(Organizm):
         super().__init__(x = x, y= y, gender= gender)
         self.brave = 0
 
-    def analyzing(self):
+    def update(self):
         enemies = []
         plants = []
         partners = []
@@ -60,10 +63,7 @@ class Ship(Organizm):
                     ships.append(organizm)
                     if organizm.gender != self.gender:
                         partners.append(organizm)
-            move = copy.copy(self.previous_move)
-            angle = random.randint(0, 360)
-            move[0] = (move[0] + 0.01*sin(angle/180*pi))/1.01
-            move[1] = (move[1] + 0.01*cos(angle/180*pi))/1.01
+
 
 
 class Wolf(Organizm):
