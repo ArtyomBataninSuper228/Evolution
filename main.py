@@ -141,6 +141,8 @@ class Wolf(Organizm):
     def update(self):
         if self.health<= 0:
             organizms.remove(self)
+        if simulation_time - self.time_of_birth >= self.age_of_adult:
+            self.is_adult = True
         enemies = []
         plants = []
         partners = []
@@ -155,6 +157,18 @@ class Wolf(Organizm):
                     wolfs.append(organizm)
                 if organizm.gender != self.gender:
                     partners.append(organizm)
+        if len(partners) != 0 and self.energy > 50 and self.is_adult and partners[-1].is_adult:
+            def reiting(p):
+                reit =0
+                if p.energy <= 50:
+                    return 0
+                reit += p.speed
+                reit += p.damage
+                return reit
+            partners.sort(key = reiting)
+            if radius(self, partners[-1] < self.actionradius):
+                self.energy -= 50
+                partners[-1].energy -= 50
 
 
 class Plant(Organizm):
