@@ -90,11 +90,13 @@ class Ship(Organizm):
             enemies.sort(key = f)
             if radius(self, enemies[0]) < self.actionradius and simulation_time - self.time_of_start_timeout >= self.timeout:
                 enemies[0].health -= self.damage/enemies[0].maxhealth
+                if self.energy > 1:
+                    self.energy -= 1
+                else:
+                    self.health -= 1
                 self.time_of_start_timeout = simulation_time
-
-
-
             return
+        if len(partners) != 0 and self.energy > 50
 
 
 
