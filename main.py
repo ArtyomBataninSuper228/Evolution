@@ -47,6 +47,8 @@ class Ship(Organizm):
         self.brave = 0
 
     def update(self):
+        if self.health<= 0:
+            organizms.remove(self)
         enemies = []
         plants = []
         partners = []
@@ -82,4 +84,3 @@ class Plant(Organizm):
 
 a = Ship(0,0, 'male')
 print(type(a))
-#ГОЙДА
