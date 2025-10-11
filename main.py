@@ -7,7 +7,8 @@ import copy
 organizms = []
 simulation_time = 0  # время с начала симуляции
 h = 1 / 100  # время между итерациями модели
-
+def radus(o1, o2):
+    return((o1.x - o2.x)**2 + (o1.y - o2.y)**2)**0.5
 
 class Organizm:
     def __init__(self, x=0, y=0, health=100, energy=100, speed=10, color=(0, 0, 0), generation=0,
@@ -78,6 +79,7 @@ class Ship(Organizm):
             l = (deltax*2 + deltay**2)**0.5
             self.previous_move = [deltax/l, deltay/l]
             self.go(self.previous_move)
+
             return
 
 
@@ -106,7 +108,7 @@ class Wolf(Organizm):
                 if organizm.gender != self.gender:
                     partners.append(organizm)
 
-        pass
+
 class Plant(Organizm):
     def __init__(self, x, y):
         super().__init__(x = x, y= y)
