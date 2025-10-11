@@ -45,6 +45,8 @@ class Ship(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
         self.brave = 0
+        self.timeout = 1
+        self.time_of_start_timeout = 0
 
     def update(self):
         if self.health<= 0:
@@ -65,6 +67,19 @@ class Ship(Organizm):
                     ships.append(organizm)
                     if organizm.gender != self.gender:
                         partners.append(organizm)
+        if len(enemies) != 0:
+            xs = 0
+            ys = 0
+            for enemy in enemies:
+                xs += enemy.x/len(enemies)
+                ys += enemy.y/len(enemies)
+            deltax = self.x - xs
+            deltay =  self.y - ys
+            l = (deltax*2 + deltay**2)**0.5
+            self.previous_move = [deltax/l, deltay/l]
+            self.go(self.previous_move)
+            return
+
 
 
 
