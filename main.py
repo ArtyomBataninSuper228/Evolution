@@ -7,7 +7,10 @@ import copy
 organizms = []
 simulation_time = 0  # время с начала симуляции
 h = 1 / 100  # время между итерациями модели
-def radus(o1, o2):
+
+
+
+def radius(o1, o2):
     return((o1.x - o2.x)**2 + (o1.y - o2.y)**2)**0.5
 
 class Organizm:
