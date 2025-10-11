@@ -128,6 +128,14 @@ class Ship(Organizm):
                 b += mutationfactor * random.randint(-int(b), 255 - int(b))
                 v = self.speed/2 + partners[-1].speed/2 + random.randint(-10, 10)*mutationfactor
                 fov = self.radius_of_view/2 + partners.radius_of_view/2 + random.randint(-100, 100)*mutationfactor
+                if random.randint(0, 1):
+                    gender = 'male'
+                else:
+                    gender = 'female'
+                child = Ship(self.x, self.y, gender)
+                child.color = (r, g, b)
+                child.speed = v
+                child.radius_of_view = fov
 
 
 
