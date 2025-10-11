@@ -22,6 +22,7 @@ class Organizm:
         self.x = x
         self.y = y
         self.health = health # Относительное здоровье ( от 0 до 1)
+        self.totalhealth = 50
         self.maxhealth = 100# Максимальное значение здоровья
         self.kreg = 0.01# коэффициент регенерации
         self.kmoove = 0.01# коэффициент затраты энергии на перемещение
@@ -46,6 +47,10 @@ class Organizm:
         global h
         self.x += vector[0] * self.speed * h
         self.y += vector[1] * self.speed * h
+        if self.energy >= self.kmoove*h:
+            self.energy -= self.kmoove*h
+        else:
+            self.health -= self.kmoove*h
 
 
 class Ship(Organizm):
@@ -61,6 +66,7 @@ class Ship(Organizm):
             organizms.remove(self)
         if simulation_time - self.time_of_birth >= self.age_of_adult:
             self.is_adult = True
+            self.totalhealth = 100
         enemies = []
         plants = []
         partners = []
@@ -120,6 +126,8 @@ class Ship(Organizm):
                 r += mutationfactor* random.randint(-int(r), 255-int(r))
                 g += mutationfactor * random.randint(-int(g), 255 - int(g))
                 b += mutationfactor * random.randint(-int(b), 255 - int(b))
+                v = self.speed/2 + partners[-1].speed/2 + random.randint(-10, 10)*mutationfactor
+                fov = self.radius_of_view/2 + partners.radius_of_view/2 + random.randint(-100, 100)*mutationfactor
 
 
 
