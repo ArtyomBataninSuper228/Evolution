@@ -73,9 +73,25 @@ class Wolf(Organizm):
         super().__init__(x = x, y= y, gender= gender)
         self.brave = 0
 
-    def analyzing(self):
+    def update(self):
+        if self.health<= 0:
+            organizms.remove(self)
+        enemies = []
+        plants = []
+        partners = []
+        wolfs = []
         for organizm in organizms:
-            pass
+            if sqrt((organizm.x - self.x) ** 2 + (organizm.y - self.y) ** 2) <= self.radius_of_view:
+                if (self.age < self.age_of_adult / 2) and type(organizm) == Ship:
+                    enemies.append(organizm)
+                if type(organizm) == Plant:
+                    plants.append(organizm)
+                if type(organizm) == Wolf:
+                    wolfs.append(organizm)
+                if organizm.gender != self.gender:
+                    partners.append(organizm)
+
+        pass
 class Plant(Organizm):
     def __init__(self, x, y):
         super().__init__(x = x, y= y)
