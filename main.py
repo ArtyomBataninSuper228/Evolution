@@ -82,3 +82,4 @@ class Plant(Organizm):
 
 a = Ship(0,0, 'male')
 print(type(a))
+#ГОЙДА
