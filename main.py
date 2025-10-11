@@ -4,7 +4,7 @@ import numpy as np
 import pygame as pg
 import copy
 
-from pandas.conftest import rand_series_with_duplicate_datetimeindex
+
 
 organizms = []
 simulation_time = 0  # время с начала симуляции
