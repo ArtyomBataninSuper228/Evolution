@@ -24,7 +24,7 @@ class Organizm:
         self.radius_of_view = radius_of_view
         self.time_of_birth = simulation_time
         self.age = 0
-        self.age_of_adult = 60
+        self.age_of_adult = 600
         self.maxage = 60*60
         self.parents = parents
         self.gender = gender
