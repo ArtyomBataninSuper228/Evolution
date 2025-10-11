@@ -4,6 +4,8 @@ import numpy as np
 import pygame as pg
 import copy
 
+from pandas.conftest import rand_series_with_duplicate_datetimeindex
+
 organizms = []
 simulation_time = 0  # время с начала симуляции
 h = 1 / 100  # время между итерациями модели
@@ -49,6 +51,7 @@ class Ship(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
         self.brave = 0
+        self.damage = 10
         self.timeout = 1
         self.time_of_start_timeout = 0
 
@@ -60,7 +63,7 @@ class Ship(Organizm):
         partners = []
         ships = []
         for organizm in organizms:
-            if sqrt((organizm.x - self.x)**2 + (organizm.y - self.y)**2) <= self.radius_of_view:
+            if radius(self, organizm) <= self.radius_of_view:
                 if (self.age < self.age_of_adult / 2) and(type(organizm) != Ship and type(organizm) != Plant):
                     enemies.append(organizm)
                 elif (self.age < self.age_of_adult / 2) and  type(organizm) == Wolf:
@@ -82,6 +85,14 @@ class Ship(Organizm):
             l = (deltax*2 + deltay**2)**0.5
             self.previous_move = [deltax/l, deltay/l]
             self.go(self.previous_move)
+            def f(v):
+                return radius(self, v)
+            enemies.sort(key = f)
+            if radius(self, enemies[0]) < self.actionradius and simulation_time - self.time_of_start_timeout >= self.timeout:
+                enemies[0].health -= self.damage/enemies[0].maxhealth
+                self.time_of_start_timeout = simulation_time
+
+
 
             return
 
@@ -101,7 +112,7 @@ class Wolf(Organizm):
         partners = []
         wolfs = []
         for organizm in organizms:
-            if sqrt((organizm.x - self.x) ** 2 + (organizm.y - self.y) ** 2) <= self.radius_of_view:
+            if radius(self, organizm) <= self.radius_of_view:
                 if (self.age < self.age_of_adult / 2) and type(organizm) == Ship:
                     enemies.append(organizm)
                 if type(organizm) == Plant:
