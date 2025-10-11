@@ -32,6 +32,7 @@ class Organizm:
         self.generation = generation
         self.radius_of_view = radius_of_view
         self.time_of_birth = simulation_time
+        self.is_adult = False
         self.age = 0
         self.age_of_adult = 600
         self.maxage = 60*60
@@ -58,6 +59,8 @@ class Ship(Organizm):
     def update(self):
         if self.health<= 0:
             organizms.remove(self)
+        if simulation_time - self.time_of_birth >= self.age_of_adult:
+            self.is_adult = True
         enemies = []
         plants = []
         partners = []
@@ -96,7 +99,7 @@ class Ship(Organizm):
                     self.health -= 1
                 self.time_of_start_timeout = simulation_time
             return
-        if len(partners) != 0 and self.energy > 50:
+        if len(partners) != 0 and self.energy > 50 and self.is_adult and partners[-1].is_adult:
             def reiting(p):
                 reit =0
                 if p.energy <= 50:
@@ -105,6 +108,7 @@ class Ship(Organizm):
                 reit += abs(self.color[1] - p.color[1])
                 reit += abs(self.color[2] - p.color[2])
                 reit += p.speed
+                reit += p.damage
                 return reit
             partners.sort(key = reiting)
             if radius(self, partners[-1] < self.actionradius):
@@ -113,6 +117,9 @@ class Ship(Organizm):
                 r = self.color[0]/2 + partners[-1].color[0]/2
                 g = self.color[1] / 2 + partners[-1].color[1] / 2
                 b = self.color[2] / 2 + partners[-1].color[2] / 2
+                r += mutationfactor* random.randint(-int(r), 255-int(r))
+                g += mutationfactor * random.randint(-int(g), 255 - int(g))
+                b += mutationfactor * random.randint(-int(b), 255 - int(b))
 
 
 
