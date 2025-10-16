@@ -30,13 +30,14 @@ camerapos = [0, 0]
 def radius(o1, o2):
     return((o1.x - o2.x)**2 + (o1.y - o2.y)**2)**0.5
 
+
 class Organizm:
     def __init__(self, x=0, y=0, health=100, energy=100, speed=10, color=(0, 0, 0), generation=0,
                  radius_of_view=100, parents=[], gender="male", icon=None):
         global organizms, simulation_time
         self.x = x
         self.y = y
-        self.health = health # Относительное здоровье ( от 0 до 1)
+        self.health = health # Относительное здоровье (от 0 до 1)
         self.totalhealth = 50
         self.maxhealth = 100# Максимальное значение здоровья взрослого
         self.kreg = 0.01# коэффициент регенерации
@@ -154,7 +155,7 @@ class Sheep(Organizm):
                 r = self.color[0]/2 + partners[-1].color[0]/2
                 g = self.color[1] / 2 + partners[-1].color[1] / 2
                 b = self.color[2] / 2 + partners[-1].color[2] / 2
-                r += mutationfactor* random.randint(-int(r), 255-int(r))
+                r += mutationfactor * random.randint(-int(r), 255 - int(r))
                 g += mutationfactor * random.randint(-int(g), 255 - int(g))
                 b += mutationfactor * random.randint(-int(b), 255 - int(b))
                 v = self.speed/2 + partners[-1].speed/2 + random.randint(-10, 10)*mutationfactor
@@ -212,13 +213,16 @@ class Wolf(Organizm):
                     plants.append(organizm)
                 if type(organizm) == Wolf:
                     wolfs.append(organizm)
-                if organizm.gender != self.gender:
+                if organizm.gender != self.gender and organizm.is_adult and self.is_adult:
                     partners.append(organizm)
-        if len(partners) != 0 and self.energy > 50 and self.is_adult and partners[-1].is_adult:
+        if len(partners) != 0 and self.energy > 50:
             def reiting(p):
                 reit =0
                 if p.energy <= 50:
                     return 0
+                reit += abs(self.color[0] - p.color[0])
+                reit += abs(self.color[1] - p.color[1])
+                reit += abs(self.color[2] - p.color[2])
                 reit += p.speed
                 reit += p.damage
                 return reit
@@ -226,6 +230,51 @@ class Wolf(Organizm):
             if radius(self, partners[-1] < self.actionradius):
                 self.energy -= 50
                 partners[-1].energy -= 50
+
+
+                r = self.color[0]/2 + partners[-1].color[0]/2
+                g = self.color[1] / 2 + partners[-1].color[1] / 2
+                b = self.color[2] / 2 + partners[-1].color[2] / 2
+                r += mutationfactor * random.randint(-int(r), 255 - int(r))
+                g += mutationfactor * random.randint(-int(g), 255 - int(g))
+                b += mutationfactor * random.randint(-int(b), 255 - int(b))
+                v = self.speed/2 + partners[-1].speed/2 + random.randint(-10, 10)*mutationfactor
+                dm = self.damage / 2 + partners[-1].damage / 2 + random.randint(-1, 1) * mutationfactor
+                fov = self.radius_of_view/2 + partners[-1].radius_of_view/2 + random.randint(-100, 100)*mutationfactor
+
+
+                gender = "male" if random.random() < 0.5 else "female"
+                child = Sheep(self.x, self.y, gender)
+                child.color = (r, g, b)
+                child.speed = v
+                child.radius_of_view = fov
+                child.damage = dm
+                child.parents = [self, partners[-1]]
+
+
+        if len(enemies) > 0 and self.energy < 70:
+
+            def distancia(x):
+                return radius(self, x)
+            enemies.sort(key=distancia)
+            blizayshiy = enemies[0]
+            deltax = blizayshiy.x - self.x
+            deltay = blizayshiy.y - self.y
+            l = (deltax * 2 + deltay ** 2) ** 0.5
+            self.previous_move=[deltax / l, deltay / l]
+            self.go(self.previous_move)
+
+
+            if l < self.actionradius and simulation_time - self.time_of_start_timeout >= self.timeout:
+                self.energy -= 1
+                if blizayshiy.health*blizayshiy.maxhealth < self.damage:
+                    self.eat(blizayshiy)
+                else:
+                    blizayshiy.health -= self.damage/blizayshiy.maxhealth
+                self.time_of_start_timeout = simulation_time
+
+
+
 
 
 class Plant(Organizm):
