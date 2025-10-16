@@ -144,9 +144,6 @@ class Ship(Organizm):
 
 
 
-
-
-
 class Wolf(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
