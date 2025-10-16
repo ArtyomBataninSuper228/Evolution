@@ -2,6 +2,8 @@ import random
 from math import *
 from random import *
 
+
+
 a = [2**0.5/2, 2**0.5/2]
 for i in range(1000):
     a[0] = (a[0] + )
