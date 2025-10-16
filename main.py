@@ -1,5 +1,9 @@
 import random
+import sys
+import time
 from math import *
+from threading import Thread
+
 import numpy as np
 import pygame as pg
 import copy
@@ -8,8 +12,19 @@ import copy
 
 organizms = []
 simulation_time = 0  # время с начала симуляции
-h = 1 / 100  # время между итерациями модели
+h = 1 / 100000  # время между итерациями модели
 mutationfactor = 0.1
+is_run_sim = True
+is_running = True
+wolf_icon = pg.image.load('Resources/Wolf.png')
+sheep_icon = pg.image.load('Resources/sheep.jpg')
+plant_icon = pg.image.load('Resources/plant.png')
+W = 1000
+H = 800
+sc = pg.display.set_mode((W, H))
+scale = 1
+FPS = 60
+camerapos = [0, 0]
 
 
 def radius(o1, o2):
@@ -23,7 +38,7 @@ class Organizm:
         self.y = y
         self.health = health # Относительное здоровье ( от 0 до 1)
         self.totalhealth = 50
-        self.maxhealth = 100# Максимальное значение здоровья
+        self.maxhealth = 100# Максимальное значение здоровья взрослого
         self.kreg = 0.01# коэффициент регенерации
         self.kmoove = 0.01# коэффициент затраты энергии на перемещение
         self.actionradius = 1 # радиус действия (есть или драться)
@@ -51,15 +66,20 @@ class Organizm:
             self.energy -= self.kmoove*h
         else:
             self.health -= self.kmoove*h
+    def eat(self, who):
+        self.energy += who.energy
+        self.energy += who.health/2
+        organizms.remove(who)
 
 
-class Ship(Organizm):
+class Sheep(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
         self.brave = 0
         self.damage = 10
         self.timeout = 1
         self.time_of_start_timeout = 0
+        self.icon = sheep_icon
 
     def update(self):
         if self.health<= 0:
@@ -67,20 +87,25 @@ class Ship(Organizm):
         if simulation_time - self.time_of_birth >= self.age_of_adult:
             self.is_adult = True
             self.totalhealth = 100
+        self.age = simulation_time - self.time_of_birth
+        if self.age >= self.maxage:
+            organizms.remove(self)
+
+
         enemies = []
         plants = []
         partners = []
-        ships = []
+        sheeps = []
         for organizm in organizms:
             if radius(self, organizm) <= self.radius_of_view:
-                if (self.age < self.age_of_adult / 2) and(type(organizm) != Ship and type(organizm) != Plant):
+                if (self.age < self.age_of_adult / 2) and(type(organizm) != Sheep and type(organizm) != Plant):
                     enemies.append(organizm)
                 elif (self.age < self.age_of_adult / 2) and  type(organizm) == Wolf:
                     enemies.append(organizm)
                 if type(organizm) == Plant:
                     plants.append(organizm)
-                if type(organizm) == Ship:
-                    ships.append(organizm)
+                if type(organizm) == Sheep:
+                    sheeps.append(organizm)
                     if organizm.gender != self.gender:
                         partners.append(organizm)
         if len(enemies) != 0:
@@ -117,6 +142,12 @@ class Ship(Organizm):
                 reit += p.damage
                 return reit
             partners.sort(key = reiting)
+            if reiting(partners[-1]) > 0:
+                deltax = partners[-1].x - self.x
+                deltay = partners[-1].y - self.y
+                l = (deltax * 2 + deltay ** 2) ** 0.5
+                self.previous_move = [deltax / l, deltay / l]
+                self.go(self.previous_move)
             if radius(self, partners[-1] < self.actionradius):
                 self.energy -= 50
                 partners[-1].energy -= 50
@@ -128,18 +159,29 @@ class Ship(Organizm):
                 b += mutationfactor * random.randint(-int(b), 255 - int(b))
                 v = self.speed/2 + partners[-1].speed/2 + random.randint(-10, 10)*mutationfactor
                 dm = self.damage / 2 + partners[-1].damage / 2 + random.randint(-1, 1) * mutationfactor
-                fov = self.radius_of_view/2 + partners.radius_of_view/2 + random.randint(-100, 100)*mutationfactor
-                if random.randint(0, 1):
-                    gender = 'male'
-                else:
-                    gender = 'female'
-                child = Ship(self.x, self.y, gender)
+                fov = self.radius_of_view/2 + partners[-1].radius_of_view/2 + random.randint(-100, 100)*mutationfactor
+
+
+                gender = "male" if random.random() < 0.5 else "female"
+                child = Sheep(self.x, self.y, gender)
                 child.color = (r, g, b)
                 child.speed = v
                 child.radius_of_view = fov
                 child.damage = dm
+                child.parents = [self, partners[-1]]
+
         if len(plants)!= 0:
-            print(plants)
+            def rt(p):
+                return radius(self, p)
+            plants.sort(key = rt)
+            deltax = plants[-1].x - self.x
+            deltay = plants[-1].y - self.y
+            l = (deltax * 2 + deltay ** 2) ** 0.5
+            self.previous_move = [deltax / l, deltay / l]
+            self.go(self.previous_move)
+
+
+
 
 
 
@@ -147,7 +189,11 @@ class Ship(Organizm):
 class Wolf(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
-        self.brave = 0
+        self.damage = 20
+        self.icon = wolf_icon
+        self.timeout = 1
+        self.time_of_start_timeout = 0
+
 
     def update(self):
         if self.health<= 0:
@@ -160,7 +206,7 @@ class Wolf(Organizm):
         wolfs = []
         for organizm in organizms:
             if radius(self, organizm) <= self.radius_of_view:
-                if (self.age < self.age_of_adult / 2) and type(organizm) == Ship:
+                if type(organizm) == Sheep:
                     enemies.append(organizm)
                 if type(organizm) == Plant:
                     plants.append(organizm)
@@ -185,8 +231,57 @@ class Wolf(Organizm):
 class Plant(Organizm):
     def __init__(self, x, y):
         super().__init__(x = x, y= y)
+        self.energy = 100
+        self.health = 25
+        self.icon = plant_icon
+    def update(self):
+        pass
 
 
 
-a = Ship(0,0, 'male')
-print(type(a))
+
+#a = Sheep(0,0, 'male')
+#b = Sheep(0,0, 'female')
+Plant(0, 0)
+s = Sheep(100, 100, "male")
+s.radius_of_view = 1000
+
+#Main loop
+def main_loop():
+    while is_running:
+        while is_run_sim:
+            for organizm in organizms:
+                organizm.update()
+        time.sleep(1 / 10)
+t = Thread(target=main_loop)
+t.start()
+
+
+
+
+#Render loop
+while is_running:
+    for e in pg.event.get():
+        if e.type == pg.QUIT:
+            sys.exit()
+    keys = pg.key.get_pressed()
+    if keys[pg.K_w]:
+        camerapos[1] += 10/FPS/scale
+    if keys[pg.K_s]:
+        camerapos[1] -= 10/FPS/scale
+    if keys[pg.K_a]:
+        camerapos[0] -= 10 / FPS / scale
+    if keys[pg.K_d]:
+        camerapos[0] += 10/FPS/scale
+    if keys[pg.K_i]:
+        scale /= 1.1
+    if keys[pg.K_k]:
+        scale *= 1.1
+
+    sc.fill((0, 0, 0))
+    for organizm in organizms:
+        x = (organizm.x + camerapos[0])*scale + 500
+        y = (organizm.y - camerapos[1])*scale + 400
+        sc.blit(organizm.icon, (x,y))
+    pg.display.update()
+
