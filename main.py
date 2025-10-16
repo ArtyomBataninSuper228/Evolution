@@ -138,6 +138,8 @@ class Ship(Organizm):
                 child.speed = v
                 child.radius_of_view = fov
                 child.damage = dm
+        if len(plants)!= 0:
+            pass
 
 
 
