@@ -387,13 +387,13 @@ class Plant(Organizm):
 
 #a = Sheep(0,0, 'male')
 #b = Sheep(0,0, 'female')
-for i in range(120):
+for i in range(300):
     Plant(random.randint(-W, W), random.randint(-H, H))
     s = Sheep(random.randint(-W, W), random.randint(-H, H), "male" if random.randint(0, 1) == 1 else "female")
     s.energy = 100
 
 
-for i in range(20):
+for i in range(40):
     w = Wolf(random.randint(-W, W), random.randint(-H, W), gender="male" if random.randint(0, 1) == 1 else "female")
 
 sp = 0
@@ -413,7 +413,7 @@ def main_loop():
                 if type(organizm) != Plant:
                     organizm.update()
             simulation_time += h
-            if random.randint(1, 10) == 1:
+            if random.randint(1, 5) == 1:
                 Plant(random.randint(-W, W), random.randint(-H, H))
 
             if simulation_time % 10 < h:
