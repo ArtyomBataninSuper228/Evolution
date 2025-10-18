@@ -248,7 +248,7 @@ class Wolf(Organizm):
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
-        self.speed = 12
+        self.speed = 11
         self.radius_of_view = 400
 
 
