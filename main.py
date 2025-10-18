@@ -168,6 +168,11 @@ class Sheep(Organizm):
             l = abs(dx**2 + dy**2)**0.5
             self.previous_move = [-dx/l, -dy/l]
             self.go(self.previous_move)
+            def f(x):
+                return radius(self, x)
+            enemies.sort(key=f)
+            if radius(self, enemies[0]) < self.actionradius:
+                enemies[-1].heals -= self.damage/enemies[-1].totalhealth
 
         if KEY == "B":
             def reiting(partner):
@@ -248,7 +253,7 @@ class Wolf(Organizm):
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
-        self.speed = 13
+        self.speed = 17
         self.radius_of_view = 400
         self.time_of_view = simulation_time
 
