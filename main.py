@@ -279,6 +279,14 @@ class Wolf(Organizm):
         if len(partners) != 0 and self.energy > 50 and reiting(partners[-1])>0:
 
 
+            partner = partners[-1]
+            dx = partner.x - self.x
+            dy = partner.y - self.y
+            l = (dx**2 + dy**2)**0.5
+            self.previous_move = [dx/l, dy/l]
+            self.go(self.previous_move)
+
+
             if radius(self, partners[-1] )< self.actionradius:
                 self.energy -= 50
                 partners[-1].energy -= 50
@@ -364,10 +372,8 @@ for i in range(120):
     s.energy = 100
 
 
-w1 = Wolf(-10, -100, "female")
-w2 = Wolf(-100, -100, "male")
-w3 = Wolf(10, 100, "female")
-w4 = Wolf(100, 100, "male")
+for i in range(12):
+    w = Wolf(random.randint(-W, W), random.randint(-H, W), gender="male" if random.randint(0, 1) == 1 else "female")
 
 sp = 0
 n = 0
