@@ -362,8 +362,9 @@ class Wolf(Organizm):
         deltax = x - self.x
         deltay = y - self.y
         l = (deltax ** 2 + deltay ** 2) ** 0.5
-        self.previous_move = [deltax / l, deltay / l]
-        self.go(self.previous_move)
+        if l != 0:
+            self.previous_move = [deltax / l, deltay / l]
+            self.go(self.previous_move)
 
 
 
