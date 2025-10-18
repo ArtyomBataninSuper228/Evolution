@@ -12,7 +12,7 @@ import copy
 
 organizms = []
 simulation_time = 0  # время с начала симуляции
-h = 1 / 100  # время между итерациями модели
+h = 1 / 20  # время между итерациями модели
 mutationfactor = 0.1
 is_run_sim = True
 is_running = True
@@ -32,15 +32,15 @@ def radius(o1, o2):
 
 
 class Organizm:
-    def __init__(self, x=0, y=0, health=1, energy=100, speed=10, color=(0, 0, 0), generation=0,
-                 radius_of_view=300, parents=[], gender="male", icon=None):
+    def __init__(self, x=0, y=0, health=1, energy=20, speed=10, color=(0, 0, 0), generation=0,
+                 radius_of_view=200, parents=[], gender="male", icon=None):
         global organizms, simulation_time
         self.x = x
         self.y = y
         self.health = health # Относительное здоровье (от 0 до 1)
         self.totalhealth = 50
         self.maxhealth = 100# Максимальное значение здоровья взрослого
-        self.kreg = 0.01# коэффициент регенерации
+        self.kreg = 0.1# коэффициент регенерации
         self.kmoove = 0.01# коэффициент затраты энергии на перемещение
         self.actionradius = 1 # радиус действия (есть или драться)
         self.energy = energy
@@ -83,24 +83,30 @@ class Sheep(Organizm):
         self.icon = sheep_icon
         self.target = None
         self.a = 1000
-        self.b = 10
+        self.b = 1000
         self.c = 1000
         self.d = 0.1
         self.time_of_birth = simulation_time
-        self.is_adult = True
-        if self.health < 1:
-            self.health += self.energy*self.kreg/self.totalhealth
-            self.energy -= self.energy*self.kreg
+        self.is_adult = False
+
 
     def update(self):
         if self.health<= 0:
+
             organizms.remove(self)
         if simulation_time - self.time_of_birth >= self.age_of_adult:
+            if self.is_adult == False:
+                self.energy  = 10
             self.is_adult = True
             self.totalhealth = 100
+
         self.age = simulation_time - self.time_of_birth
-        if self.age >= self.maxage:
+        if simulation_time - self.time_of_birth >= self.maxage:
+
             organizms.remove(self)
+        if self.health < 1:
+            self.health += self.kreg/self.totalhealth
+            self.energy -= self.kreg
 
 
         enemies = []
@@ -177,8 +183,10 @@ class Sheep(Organizm):
             dx = partner.x - self.x
             dy = partner.y - self.y
             l = (dx**2 + dy**2)**0.5
-            self.previous_move = [dx/l, dy/l]
-            self.go(self.previous_move)
+            if l != 0:
+                self.previous_move = [dx/l, dy/l]
+                self.go(self.previous_move)
+
             if radius(self, partner) <= self.actionradius and simulation_time- self.time_of_start_timeout > self.timeout:
                 self.time_of_start_timeout = simulation_time
                 partner.time_of_start_timeout = simulation_time
@@ -198,6 +206,7 @@ class Sheep(Organizm):
                 c = self.c/2 + partner.c/2 + mutationfactor*random.randint(-1, 1)
                 gender = "male" if random.random() < 0.5 else "female"
                 child = Sheep(self.x + random.randint(-10, 10), self.y + random.randint(-10, 10), gender)
+
                 child.r = r
                 child.g = g
                 child.b = b
@@ -355,7 +364,7 @@ class Wolf(Organizm):
 class Plant(Organizm):
     def __init__(self, x, y):
         super().__init__(x = x, y= y)
-        self.energy = 10
+        self.energy = 100
         self.health = 4
         self.icon = plant_icon
     def update(self):
@@ -367,8 +376,8 @@ class Plant(Organizm):
 #a = Sheep(0,0, 'male')
 #b = Sheep(0,0, 'female')
 for i in range(120):
-    Plant(random.randint(-W//2, W//2), random.randint(-H//2, H//2))
-    s = Sheep(random.randint(-W//2, W//2), random.randint(-H//2, H//2), "male" if random.randint(0, 1) == 1 else "female")
+    Plant(random.randint(-W, W), random.randint(-H, H))
+    s = Sheep(random.randint(-W, W), random.randint(-H, H), "male" if random.randint(0, 1) == 1 else "female")
     s.energy = 100
 
 
@@ -392,9 +401,16 @@ def main_loop():
                 if type(organizm) != Plant:
                     organizm.update()
             simulation_time += h
-            if random.randint(1, 25) == 1:
+            if random.randint(1, 10) == 1:
                 Plant(random.randint(-W, W), random.randint(-H, H))
+
             if simulation_time % 10 < h:
+                sp = 0
+                n = 0
+                for i in organizms:
+                    if type(i) == Sheep or type(i) == Wolf:
+                        sp += i.speed
+                        n += 1
                 mt.append(simulation_time)
                 mn.append(n)
                 mv.append(sp / n)
@@ -437,13 +453,7 @@ while is_running:
     t2 = time.time()
     if t2  -t1 < 1/FPS:
         time.sleep(1/FPS -(t2-t1))
-    if random.randint(0, 100) == 1:
-        sp = 0
-        n = 0
-        for i in organizms:
-            if type(i) == Sheep or type(i) == Wolf:
-                sp += i.speed
-                n += 1
+
 
     for e in pg.event.get():
         if e.type == pg.QUIT:
@@ -451,7 +461,6 @@ while is_running:
             is_run_sim = False#
             pg.quit()
 
-print(mt, mn, mv)
 plt.plot(mt, mn)
 plt.show()
 plt.plot(mt, mv)
