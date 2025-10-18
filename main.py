@@ -77,7 +77,7 @@ class Sheep(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
         self.brave = 0
-        self.damage = 10
+        self.damage = 2
         self.timeout = 1
         self.time_of_start_timeout = 0
         self.icon = sheep_icon
@@ -171,8 +171,9 @@ class Sheep(Organizm):
             def f(x):
                 return radius(self, x)
             enemies.sort(key=f)
-            if radius(self, enemies[0]) < self.actionradius:
-                enemies[-1].heals -= self.damage/enemies[-1].totalhealth
+            if radius(self, enemies[0]) < self.actionradius and simulation_time - self.time_of_start_timeout >= self.timeout:
+                enemies[-1].health -= self.damage/enemies[-1].totalhealth
+                self.time_of_start_timeout = simulation_time
 
         if KEY == "B":
             def reiting(partner):
