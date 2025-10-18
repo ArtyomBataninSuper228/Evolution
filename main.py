@@ -221,6 +221,7 @@ class Sheep(Organizm):
                 child.c = c
                 child.speed = speed
                 child.damage = damage
+                child.parents = [self, partner]
 
 
         if KEY == "C" and len(plants) > 0:
@@ -250,7 +251,7 @@ class Sheep(Organizm):
 class Wolf(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
-        self.damage = 30
+        self.damage = 10
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
@@ -264,6 +265,7 @@ class Wolf(Organizm):
             organizms.remove(self)
         if simulation_time - self.time_of_birth >= self.age_of_adult:
             self.is_adult = True
+            self.damage = 30
         if simulation_time-self.time_of_birth > self.maxage:
             organizms.remove(self)
         enemies = []
@@ -322,7 +324,7 @@ class Wolf(Organizm):
 
 
                 gender = "male" if random.random() < 0.5 else "female"
-                child = Wolf(self.x + random.randint(-1, 1), self.y+ random.randint(-1, 1), gender)
+                child = Wolf(self.x + random.randint(-10, 10), self.y+ random.randint(-10, 10), gender)
                 child.color = (r, g, b)
                 child.speed = v
                 child.radius_of_view = fov
@@ -352,11 +354,11 @@ class Wolf(Organizm):
 
         x = 0
         y = 0
-        for i in organizms:
+        for i in wolfs:
             x += i.x
             y += i.y
-        x /= len(organizms)
-        y /= len(organizms)
+        x /= len(wolfs)
+        y /= len(wolfs)
         deltax = x - self.x
         deltay = y - self.y
         l = (deltax ** 2 + deltay ** 2) ** 0.5
@@ -390,7 +392,7 @@ for i in range(120):
     s.energy = 100
 
 
-for i in range(12):
+for i in range(20):
     w = Wolf(random.randint(-W, W), random.randint(-H, W), gender="male" if random.randint(0, 1) == 1 else "female")
 
 sp = 0
