@@ -3,7 +3,7 @@ import sys
 import time
 from math import *
 from threading import Thread
-
+from matplotlib import pyplot as plt
 import numpy as np
 import pygame as pg
 import copy
@@ -82,6 +82,15 @@ class Sheep(Organizm):
         self.time_of_start_timeout = 0
         self.icon = sheep_icon
         self.target = None
+        self.a = 1000
+        self.b = 10
+        self.c = 1000
+        self.d = 0.1
+        self.time_of_birth = simulation_time
+        self.is_adult = True
+        if self.health < 1:
+            self.health += self.energy*self.kreg/self.totalhealth
+            self.energy -= self.energy*self.kreg
 
     def update(self):
         if self.health<= 0:
@@ -108,104 +117,113 @@ class Sheep(Organizm):
                     plants.append(organizm)
                 if type(organizm) == Sheep:
                     sheeps.append(organizm)
-                    if organizm.gender != self.gender:
+                    if organizm.gender != self.gender and organizm.is_adult :
                         partners.append(organizm)
-        if len(enemies) != 0:
-            xs = 0
-            ys = 0
+        A = 0
+        B = 0
+        C = 0
+        D = self.d
+        for enemy in enemies:
+            A += self.a/radius(self, enemy)
+
+        if self.energy > 50 and len(partners) > 0 and self.is_adult and self.energy > 50:
+            def reiting(partner):
+                rt = 0
+                rt += abs(self.color[0] - partner.color[0]) + abs(self.color[1] - partner.color[1])+ abs(self.color[2] - partner.color[2])
+                rt += partner.damage
+                rt += partner.speed
+                return rt
+            for partner in partners:
+                try:
+                    B += self.b*reiting(partner)/radius(self, partner)
+                except ZeroDivisionError:
+                    B += self.b*reiting(partner)/1
+
+        for plant in plants:
+            C +=   1/(1+self.energy)*self.c/radius(self, plant)
+        m = [["A", A], ["B", B], ["C", C]]
+        def f(el):
+            return(el[1])
+        m.sort(key=f)
+        if m[-1][1] != 0:
+           KEY  = m[-1][0]
+        else:
+            KEY = "D"
+        if KEY == "A":
+            x = 0
+            y = 0
             for enemy in enemies:
-                xs += enemy.x/len(enemies)
-                ys += enemy.y/len(enemies)
-            deltax = self.x - xs
-            deltay =  self.y - ys
-            l = (deltax**2 + deltay**2)**0.5
-            self.previous_move = [deltax/l, deltay/l]
+                x += enemy.x
+                y +=  enemy.y
+            x /= len(enemies)
+            y /= len(enemies)
+            dx = x - self.x
+            dy = y - self.y
+            l = abs(dx**2 + dy**2)**0.5
+            self.previous_move = [-dx/l, -dy/l]
             self.go(self.previous_move)
-            def f(v):
-                return radius(self, v)
-            enemies.sort(key = f)
-            if radius(self, enemies[0]) < self.actionradius and simulation_time - self.time_of_start_timeout >= self.timeout:
-                enemies[0].health -= self.damage/enemies[0].maxhealth
-                if self.energy > 1:
-                    self.energy -= 1
-                else:
-                    self.health -= 1
+
+        if KEY == "B":
+            def reiting(partner):
+                rt = 0
+                rt += abs(self.color[0] - partner.color[0]) + abs(self.color[1] - partner.color[1]) + abs(
+                    self.color[2] - partner.color[2])
+                rt += partner.damage
+                rt += partner.speed
+                return rt
+            partners.sort(key=reiting)
+            partner = partners[-1]
+
+            dx = partner.x - self.x
+            dy = partner.y - self.y
+            l = (dx**2 + dy**2)**0.5
+            self.previous_move = [dx/l, dy/l]
+            self.go(self.previous_move)
+            if radius(self, partner) <= self.actionradius and simulation_time- self.time_of_start_timeout > self.timeout:
                 self.time_of_start_timeout = simulation_time
-            return
-        if len(partners) != 0 and self.energy > 50 and self.is_adult and partners[-1].is_adult:
-            def reiting(p):
-                reit =0
-                if p.energy <= 50:
-                    return 0
-                reit += abs(self.color[0] - p.color[0])
-                reit += abs(self.color[1] - p.color[1])
-                reit += abs(self.color[2] - p.color[2])
-                reit += p.speed
-                reit += p.damage
-                return reit
-            partners.sort(key = reiting)
-            if reiting(partners[-1]) > 0:
-                deltax = partners[-1].x - self.x
-                deltay = partners[-1].y - self.y
-                l = (deltax ** 2 + deltay ** 2) ** 0.5
-                self.previous_move = [deltax / l, deltay / l]
-                self.go(self.previous_move)
-            if radius(self, partners[-1] ) < self.actionradius:
+                partner.time_of_start_timeout = simulation_time
                 self.energy -= 50
-                partners[-1].energy -= 50
-                r = self.color[0]/2 + partners[-1].color[0]/2
-                g = self.color[1] / 2 + partners[-1].color[1] / 2
-                b = self.color[2] / 2 + partners[-1].color[2] / 2
-                r += mutationfactor * random.randint(-int(r), 255 - int(r))
-                g += mutationfactor * random.randint(-int(g), 255 - int(g))
-                b += mutationfactor * random.randint(-int(b), 255 - int(b))
-                v = self.speed/2 + partners[-1].speed/2 + random.randint(-10, 10)*mutationfactor
-                dm = self.damage / 2 + partners[-1].damage / 2 + random.randint(-1, 1) * mutationfactor
-                fov = self.radius_of_view/2 + partners[-1].radius_of_view/2 + random.randint(-100, 100)*mutationfactor
+                partner.energy -= 50
+                r = self.color[0]/2 + partner.color[0]/2
+                g = self.color[1] / 2 + partner.color[1] / 2
+                b = self.color[2] / 2 + partner.color[2] / 2
+                r += mutationfactor*random.randint(int(-r), 255 - int(r))
+                g += mutationfactor*random.randint(int(-g), 255 - int(g))
+                b += mutationfactor*random.randint(int(-b), 255 - int(b))
 
-
+                speed = self.speed/2 + partner.speed/2 + mutationfactor*random.randint(-10, 10)
+                damage = self.damage/2 + partner.damage/2 + mutationfactor*random.randint(-1, 1)
+                a = self.a/2 + partner.a/2 + mutationfactor*random.randint(-1, 1)
+                b = self.b/2 + partner.b/2 + mutationfactor*random.randint(-1, 1)
+                c = self.c/2 + partner.c/2 + mutationfactor*random.randint(-1, 1)
                 gender = "male" if random.random() < 0.5 else "female"
-                child = Sheep(self.x + random.randint(-1, 1), self.y + random.randint(-1, 1), gender)
-                child.color = (r, g, b)
-                child.speed = v
-                child.radius_of_view = fov
-                child.damage = dm
-                child.parents = [self, partners[-1]]
-            return
-        if self.target not in organizms:
-            self.target = None
-        if len(plants)!= 0 and self.target == None:
-            def rt(p):
-                return radius(self, p)
-            plants.sort(key=rt)
-            num = random.randint(0, len(plants) - 1)
-            num = random.randint(0, num)
-            plant = plants[num]
-            self.target = plants[num]
-        if self.target != None:
+                child = Sheep(self.x + random.randint(-10, 10), self.y + random.randint(-10, 10), gender)
+                child.r = r
+                child.g = g
+                child.b = b
+                child.a = a
+                child.b = b
+                child.c = c
+                child.speed = speed
+                child.damage = damage
 
-            deltax = self.target.x - self.x
-            deltay = self.target.y - self.y
-            l = (deltax ** 2 + deltay ** 2) ** 0.5
-            self.previous_move = [deltax / l, deltay / l]
-            if radius(self, plants[0]) <= self.actionradius:
-                self.eat(plants[0])
+
+        if KEY == "C" and len(plants) > 0:
+            def f(plant):
+                return radius(self, plant)
+
+
+            plants.sort(key=f)
+            plant = plants[0]
+            dx = plant.x - self.x
+            dy = plant.y - self.y
+            l = (dx**2 + dy**2)**0.5
+            self.previous_move = [dx/l, dy/l]
             self.go(self.previous_move)
-            if radius(self, self.target) <= self.actionradius:
-                self.eat(self.target)
-            return
-        x = 0
-        y = 0
-        for i in organizms:
-            x += i.x
-            y += i.y
-        x /= len(organizms)
-        y /= len(organizms)
-        deltax = x - self.x
-        deltay = y - self.y
-        l = (deltax ** 2 + deltay ** 2) ** 0.5
-        self.previous_move = [deltax / l, deltay / l]
-        self.go(self.previous_move)
+            if radius(self, plant) <= self.actionradius:
+                self.eat(plant)
+
+
 
 
 
@@ -329,8 +347,8 @@ class Wolf(Organizm):
 class Plant(Organizm):
     def __init__(self, x, y):
         super().__init__(x = x, y= y)
-        self.energy = 100
-        self.health = 25
+        self.energy = 10
+        self.health = 4
         self.icon = plant_icon
     def update(self):
         pass
@@ -348,8 +366,8 @@ for i in range(120):
 
 w1 = Wolf(-10, -100, "female")
 w2 = Wolf(-100, -100, "male")
-w3 = Wolf(-10, -100, "female")
-w4 = Wolf(-100, -100, "male")
+w3 = Wolf(10, 100, "female")
+w4 = Wolf(100, 100, "male")
 
 sp = 0
 n = 0
@@ -365,27 +383,31 @@ def main_loop():
     while is_running:
         while is_run_sim:
             for organizm in organizms:
-                organizm.update()
+                if type(organizm) != Plant:
+                    organizm.update()
             simulation_time += h
             if random.randint(1, 25) == 1:
-                pass
                 Plant(random.randint(-W, W), random.randint(-H, H))
+            if simulation_time % 10 < h:
+                mt.append(simulation_time)
+                mn.append(n)
+                mv.append(sp / n)
         time.sleep(1 / 10)
 
+
+
+mt= []
+mn = []
+mv = []
 t = Thread(target=main_loop)
 t.start()
-
-
 
 
 #Render loop
 while is_running:
     t1 = time.time()
-    for e in pg.event.get():
-        if e.type == pg.QUIT:
-            is_running = False
-            is_run_sim = False
-            sys.exit()
+
+
     keys = pg.key.get_pressed()
     if keys[pg.K_w]:
         camerapos[1] -= 300/FPS/scale
@@ -416,5 +438,15 @@ while is_running:
             if type(i) == Sheep or type(i) == Wolf:
                 sp += i.speed
                 n += 1
-        print(sp/n)
 
+    for e in pg.event.get():
+        if e.type == pg.QUIT:
+            is_running = False
+            is_run_sim = False#
+            pg.quit()
+
+print(mt, mn, mv)
+plt.plot(mt, mn)
+plt.show()
+plt.plot(mt, mv)
+plt.show()
