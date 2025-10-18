@@ -248,8 +248,9 @@ class Wolf(Organizm):
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
-        self.speed = 11
+        self.speed = 13
         self.radius_of_view = 400
+        self.time_of_view = simulation_time
 
 
     def update(self):
@@ -257,6 +258,8 @@ class Wolf(Organizm):
             organizms.remove(self)
         if simulation_time - self.time_of_birth >= self.age_of_adult:
             self.is_adult = True
+        if simulation_time-self.time_of_birth > self.maxage:
+            organizms.remove(self)
         enemies = []
         plants = []
         partners = []
