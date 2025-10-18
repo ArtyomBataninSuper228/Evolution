@@ -250,11 +250,11 @@ class Sheep(Organizm):
 class Wolf(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
-        self.damage = 20
+        self.damage = 30
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
-        self.speed = 17
+        self.speed = 20
         self.radius_of_view = 400
         self.time_of_view = simulation_time
 
