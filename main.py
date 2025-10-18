@@ -12,7 +12,7 @@ import copy
 
 organizms = []
 simulation_time = 0  # время с начала симуляции
-h = 1 / 40  # время между итерациями модели
+h = 1 / 25  # время между итерациями модели
 mutationfactor = 0.1
 is_run_sim = True
 is_running = True
@@ -40,7 +40,7 @@ class Organizm:
         self.health = health # Относительное здоровье (от 0 до 1)
         self.totalhealth = 50
         self.maxhealth = 100# Максимальное значение здоровья взрослого
-        self.kreg = 0.1# коэффициент регенерации
+        self.kreg = 0.01*h# коэффициент регенерации
         self.kmoove = 0.01# коэффициент затраты энергии на перемещение
         self.actionradius = 1 # радиус действия (есть или драться)
         self.energy = energy
@@ -83,7 +83,7 @@ class Sheep(Organizm):
         self.icon = sheep_icon
         self.target = None
         self.a = 1000
-        self.b = 1000
+        self.b = 4000
         self.c = 1000
         self.d = 0.1
         self.time_of_birth = simulation_time
@@ -130,7 +130,10 @@ class Sheep(Organizm):
         C = 0
         D = self.d
         for enemy in enemies:
-            A += self.a/radius(self, enemy)
+            try:
+                A += self.a/radius(self, enemy)
+            except ZeroDivisionError:
+                A += self.a /1
 
         if self.energy > 50 and len(partners) > 0 and self.is_adult and self.energy > 50:
             def reiting(partner):
@@ -146,7 +149,10 @@ class Sheep(Organizm):
                     B += self.b*reiting(partner)/1
 
         for plant in plants:
-            C +=   1/(1+self.energy)*self.c/radius(self, plant)
+            try:
+                C +=   1/(1+self.energy)*self.c/radius(self, plant)
+            except ZeroDivisionError:
+                C += 1/(1+self.energy)*self.c/1
         m = [["A", A], ["B", B], ["C", C]]
         def f(el):
             return(el[1])
@@ -354,11 +360,14 @@ class Wolf(Organizm):
 
         x = 0
         y = 0
-        for i in wolfs:
-            x += i.x
-            y += i.y
-        x /= len(wolfs)
-        y /= len(wolfs)
+        n=0
+        for i in organizms:
+            if type(i) == Wolf:
+                x += i.x
+                y += i.y
+                n += 1
+        x /= n
+        y /= n
         deltax = x - self.x
         deltay = y - self.y
         l = (deltax ** 2 + deltay ** 2) ** 0.5
@@ -393,7 +402,7 @@ for i in range(300):
     s.energy = 100
 
 
-for i in range(40):
+for i in range(10):
     w = Wolf(random.randint(-W, W), random.randint(-H, W), gender="male" if random.randint(0, 1) == 1 else "female")
 
 sp = 0
