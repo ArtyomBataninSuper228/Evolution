@@ -52,7 +52,7 @@ class Organizm:
         self.is_adult = False
         self.age = 0
         self.age_of_adult = 60
-        self.maxage = 60*60
+        self.maxage = 60*4
         self.parents = parents
         self.gender = gender
         self.icon = icon
@@ -81,6 +81,7 @@ class Sheep(Organizm):
         self.timeout = 1
         self.time_of_start_timeout = 0
         self.icon = sheep_icon
+        self.target = None
 
     def update(self):
         if self.health<= 0:
@@ -101,7 +102,7 @@ class Sheep(Organizm):
             if radius(self, organizm) <= self.radius_of_view:
                 if (self.age < self.age_of_adult / 2) and(type(organizm) != Sheep and type(organizm) != Plant):
                     enemies.append(organizm)
-                elif (self.age < self.age_of_adult / 2) and  type(organizm) == Wolf:
+                if type(organizm) == Wolf:
                     enemies.append(organizm)
                 if type(organizm) == Plant:
                     plants.append(organizm)
@@ -164,24 +165,47 @@ class Sheep(Organizm):
 
 
                 gender = "male" if random.random() < 0.5 else "female"
-                child = Sheep(self.x, self.y, gender)
+                child = Sheep(self.x + random.randint(-1, 1), self.y + random.randint(-1, 1), gender)
                 child.color = (r, g, b)
                 child.speed = v
                 child.radius_of_view = fov
                 child.damage = dm
                 child.parents = [self, partners[-1]]
-
-        if len(plants)!= 0:
+            return
+        if self.target not in organizms:
+            self.target = None
+        if len(plants)!= 0 and self.target == None:
             def rt(p):
                 return radius(self, p)
-            plants.sort(key = rt)
-            deltax = plants[0].x - self.x
-            deltay = plants[0].y - self.y
+            plants.sort(key=rt)
+            num = random.randint(0, len(plants) - 1)
+            num = random.randint(0, num)
+            plant = plants[num]
+            self.target = plants[num]
+        if self.target != None:
+
+            deltax = self.target.x - self.x
+            deltay = self.target.y - self.y
             l = (deltax ** 2 + deltay ** 2) ** 0.5
             self.previous_move = [deltax / l, deltay / l]
             if radius(self, plants[0]) <= self.actionradius:
                 self.eat(plants[0])
             self.go(self.previous_move)
+            if radius(self, self.target) <= self.actionradius:
+                self.eat(self.target)
+            return
+        x = 0
+        y = 0
+        for i in organizms:
+            x += i.x
+            y += i.y
+        x /= len(organizms)
+        y /= len(organizms)
+        deltax = x - self.x
+        deltay = y - self.y
+        l = (deltax ** 2 + deltay ** 2) ** 0.5
+        self.previous_move = [deltax / l, deltay / l]
+        self.go(self.previous_move)
 
 
 
@@ -197,7 +221,8 @@ class Wolf(Organizm):
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
-        self.speed = 11
+        self.speed = 15
+        self.radius_of_view = 400
 
 
     def update(self):
@@ -219,18 +244,23 @@ class Wolf(Organizm):
                     wolfs.append(organizm)
                 if organizm.gender != self.gender and organizm.is_adult and self.is_adult:
                     partners.append(organizm)
-        if len(partners) != 0 and self.energy > 50:
-            def reiting(p):
-                reit =0
-                if p.energy <= 50:
-                    return 0
-                reit += abs(self.color[0] - p.color[0])
-                reit += abs(self.color[1] - p.color[1])
-                reit += abs(self.color[2] - p.color[2])
-                reit += p.speed
-                reit += p.damage
-                return reit
-            partners.sort(key = reiting)
+
+        def reiting(p):
+            reit = 0
+
+            if p.energy <= 50:
+                return 0
+            reit += abs(self.color[0] - p.color[0])
+            reit += abs(self.color[1] - p.color[1])
+            reit += abs(self.color[2] - p.color[2])
+            reit += p.speed
+            reit += p.damage
+            return reit
+
+        partners.sort(key=reiting)
+        if len(partners) != 0 and self.energy > 50 and reiting(partners[-1])>0:
+
+
             if radius(self, partners[-1] )< self.actionradius:
                 self.energy -= 50
                 partners[-1].energy -= 50
@@ -248,12 +278,13 @@ class Wolf(Organizm):
 
 
                 gender = "male" if random.random() < 0.5 else "female"
-                child = Wolf(self.x, self.y, gender)
+                child = Wolf(self.x + random.randint(-1, 1), self.y+ random.randint(-1, 1), gender)
                 child.color = (r, g, b)
                 child.speed = v
                 child.radius_of_view = fov
                 child.damage = dm
                 child.parents = [self, partners[-1]]
+            return
 
 
         if len(enemies) > 0:
@@ -273,20 +304,23 @@ class Wolf(Organizm):
                 else:
                     blizayshiy.health -= self.damage/blizayshiy.maxhealth
                     self.time_of_start_timeout = simulation_time
+            return
 
-        elif len(plants) > 0 and random.random() < 0.3:
-            def distancia_plant(p):
-                return radius(self, p)
-            plants.sort(key=distancia_plant)
-            blizayshiy_plant = plants[0]
-            deltax = blizayshiy_plant.x - self.x
-            deltay = blizayshiy_plant.y - self.y
-            l = (deltax ** 2 + deltay ** 2) ** 0.5
-            if l > 0:
-                self.previous_move = [deltax / l, deltay / l]
-                self.go(self.previous_move)
-            if radius(self, blizayshiy_plant) <= self.actionradius:
-                self.eat(blizayshiy_plant)
+        x = 0
+        y = 0
+        for i in organizms:
+            x += i.x
+            y += i.y
+        x /= len(organizms)
+        y /= len(organizms)
+        deltax = x - self.x
+        deltay = y - self.y
+        l = (deltax ** 2 + deltay ** 2) ** 0.5
+        self.previous_move = [deltax / l, deltay / l]
+        self.go(self.previous_move)
+
+
+
 
 
 
@@ -306,21 +340,24 @@ class Plant(Organizm):
 
 #a = Sheep(0,0, 'male')
 #b = Sheep(0,0, 'female')
-for i in range(30):
-    #Plant(random.randint(-W//2, W//2), random.randint(-H//2, H//2))
+for i in range(120):
+    Plant(random.randint(-W//2, W//2), random.randint(-H//2, H//2))
     s = Sheep(random.randint(-W//2, W//2), random.randint(-H//2, H//2), "male" if random.randint(0, 1) == 1 else "female")
     s.energy = 100
-for i in organizms:
-    if type(i) == Sheep and i.gender == "male":
-        print("male")
-for i in organizms:
-    if type(i) == Sheep and i.gender == "female":
-        print("female")
+
 
 w1 = Wolf(-10, -100, "female")
 w2 = Wolf(-100, -100, "male")
+w3 = Wolf(-10, -100, "female")
+w4 = Wolf(-100, -100, "male")
 
-
+sp = 0
+n = 0
+for i in organizms:
+    if type(i) == Sheep or type(i) == Wolf:
+        sp += i.speed
+        n += 1
+print(sp/n)
 
 #Main loop
 def main_loop():
@@ -330,9 +367,9 @@ def main_loop():
             for organizm in organizms:
                 organizm.update()
             simulation_time += h
-            if random.randint(1, 100) == 1:
+            if random.randint(1, 25) == 1:
                 pass
-                Plant(random.randint(-W // 2, W // 2), random.randint(-H // 2, H // 2))
+                Plant(random.randint(-W, W), random.randint(-H, H))
         time.sleep(1 / 10)
 
 t = Thread(target=main_loop)
@@ -372,4 +409,12 @@ while is_running:
     t2 = time.time()
     if t2  -t1 < 1/FPS:
         time.sleep(1/FPS -(t2-t1))
+    if random.randint(0, 100) == 1:
+        sp = 0
+        n = 0
+        for i in organizms:
+            if type(i) == Sheep or type(i) == Wolf:
+                sp += i.speed
+                n += 1
+        print(sp/n)
 
