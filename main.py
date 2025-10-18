@@ -12,7 +12,7 @@ import copy
 
 organizms = []
 simulation_time = 0  # время с начала симуляции
-h = 1 / 20  # время между итерациями модели
+h = 1 / 40  # время между итерациями модели
 mutationfactor = 0.1
 is_run_sim = True
 is_running = True
@@ -251,7 +251,7 @@ class Sheep(Organizm):
 class Wolf(Organizm):
     def __init__(self, x, y, gender):
         super().__init__(x = x, y= y, gender= gender)
-        self.damage = 10
+        self.damage = 20
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
