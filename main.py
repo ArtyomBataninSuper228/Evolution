@@ -261,7 +261,7 @@ class Wolf(Organizm):
         self.icon = wolf_icon
         self.timeout = 1
         self.time_of_start_timeout = 0
-        self.speed = 20
+        self.speed = 15
         self.radius_of_view = 400
         self.time_of_view = simulation_time
 
@@ -397,7 +397,8 @@ class Plant(Organizm):
 #a = Sheep(0,0, 'male')
 #b = Sheep(0,0, 'female')
 for i in range(300):
-    Plant(random.randint(-W, W), random.randint(-H, H))
+    for k in range(4):
+        Plant(random.randint(-W, W), random.randint(-H, H))
     s = Sheep(random.randint(-W, W), random.randint(-H, H), "male" if random.randint(0, 1) == 1 else "female")
     s.energy = 100
 
